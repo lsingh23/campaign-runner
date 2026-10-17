@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="head"><div><div class="kicker">Steps 7–9 · Write, check, set check</div><h1>Articles</h1>
+<p class="today">Today: "work on the next 4 articles" × 8, checked by the same chat that wrote them.</p></div>
+{% if c.state == 'DONE' %}<a class="btn green" href="/c/{{ c.id }}/export.zip">Download .md ↓</a>{% endif %}</div>
+{% if not arts %}<div class="card" style="margin-top:20px">Writing has not started yet.</div>{% else %}
+<div class="scroll" style="margin-top:18px"><table class="table">
+  <tr><th>#</th><th>Title</th><th>Type</th><th>Status</th><th class="num">Attempts</th><th class="num">Words</th><th class="num">Model time</th><th class="num">Cost</th></tr>
+  {% for a in arts %}<tr>
+    <td>{{ a.plan_idx + 1 }}</td><td><a href="/c/{{ c.id }}/articles/{{ a.id }}">{{ a.final.title if a.final else a.plan_title }}</a></td>
+    <td><span class="tag">{{ TYPE_LABELS.get(a.plan_type, a.plan_type) }}</span></td>
+    <td><span class="st {{ a.status.split(' ')[0] }}">{{ a.status }}</span></td>
+    <td class="num">{{ a.attempts | length }}</td><td class="num">{{ (a.final.body_markdown | words) if a.final else '–' }}</td>
+    <td class="num">{{ a.seconds | round | int }} s</td><td class="num">${{ '%.2f' % a.cost_usd }}</td></tr>{% endfor %}
+</table></div>
+{% if fc %}
+<h2 id="set-check">Final check across the set</h2>
+{% if fc.issues %}<table class="table"><tr><th>Articles</th><th>Repeat</th><th>Detail</th></tr>
+  {% for i in fc.issues %}<tr><td>#{{ i.a }} ↔ #{{ i.b }}</td><td><span class="tag amber">{{ i.kind }}</span></td><td class="small">{{ i.detail }}</td></tr>{% endfor %}</table>
+{% else %}<div class="flash ok">✓ No repeated phrasing, identical headings or similar intros across {{ fc.articles }} articles.</div>{% endif %}
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="head"><div><div class="kicker">Step 3 · LLM visibility audit</div>
+<h1>Audit: {{ c.brief.client_name }}</h1>
+<p class="today">Today: uploading the dissection PDFs to ChatGPT's LLM Visibility Audit, which makes a Google Sheet.</p></div>
+{% if rows %}<div style="display:flex;gap:8px"><a class="btn ghost" href="/c/{{ c.id }}/audit.csv">Export CSV ↓</a><a class="btn {{ 'amber' if c.state == 'AWAIT_CLIENT' else 'ghost' }}" href="/client/{{ c.client_token }}" target="_blank">Client sheet ↗</a></div>{% endif %}</div>
+{% if not rows %}<div class="card" style="margin-top:20px">The audit is not built yet.</div>{% else %}
+{% if a.key_findings %}<h2>Key findings</h2><ul>{% for k in a.key_findings %}<li>{{ k }}</li>{% endfor %}</ul>{% endif %}
+
+<h2>Keyword summary <span class="muted" style="font-weight:500">· every row is tied to a real fan-out query</span></h2>
+{% if a.dropped_rows %}<p class="small" style="color:var(--amber-d)">Gate: {{ a.dropped_rows }} row(s) the AI proposed were dropped because they did not trace to any fan-out query.</p>{% endif %}
+<div class="scroll"><table class="table">
+  <tr><th>Keyword</th><th>Context</th><th>Evidence (fan-outs)</th><th>Supported?</th><th>Client notes</th></tr>
+  {% for r in rows %}{% if loop.first or r.grp != loop.previtem.grp %}<tr class="grp"><td colspan="5">{{ r.grp }}</td></tr>{% endif %}
+  <tr><td><b>{{ r.keyword }}</b></td><td class="small">{{ r.context }}</td>
+  <td>{% for e in r.evidence %}<span class="tag blue" title="{{ fanouts.get(e, '') }}">{{ e }}</span> {% endfor %}</td>
+  <td>{% if r.supported == 'Yes' %}<span class="tag green">Yes</span>{% elif r.supported == 'No' %}<span class="tag red">No</span>{% else %}<span class="tag amber">waiting</span>{% endif %}</td>
+  <td class="small cyan">{{ r.notes }}</td></tr>{% endfor %}
+</table></div>
+
+<details class="fold"><summary><b>Winners &amp; categories</b> <span class="muted">· {{ a.winners_categories | length }} rows</span></summary>
+<table class="table"><tr><th>Run</th><th>Category type</th><th>Exact category</th><th>Winner</th></tr>
+  {% for w in a.winners_categories %}<tr><td>{{ w.run }}</td><td><span class="tag">{{ w.category_type }}</span></td><td>{{ w.exact_category }}</td><td><b>{{ w.winner }}</b></td></tr>{% endfor %}</table>
+
+</details>
+<details class="fold"><summary><b>Pages &amp; profiles to create</b> <span class="muted">· {{ a.pages_profiles | length }}</span></summary>
+<table class="table"><tr><th>Site</th><th>Page / profile</th><th>Why</th></tr>
+  {% for p in a.pages_profiles %}<tr><td>{{ p.host }}</td><td>{{ p.page }}</td><td class="small">{{ p.why }}</td></tr>{% endfor %}</table>
+
+</details>
+<details class="fold"><summary><b>Sources</b> <span class="muted">· {{ hosts | length }} sites</span></summary>
+<table class="table"><tr><th>Site</th><th>Type</th><th class="num">Records</th></tr>
+  {% for h, n in hosts %}<tr><td>{{ h }}</td><td>{{ (d.host_types.get(h) or 'other').replace('_',' ') }}</td><td class="num">{{ n }}</td></tr>{% endfor %}</table>
+<p class="small muted" style="margin-top:8px">Domain Rating (Ahrefs) would be added here in the full version.</p></details>
+{% endif %}
+{% endblock %}

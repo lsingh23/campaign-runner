@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="head">
+  <div><div class="kicker">LLM ranking campaigns</div><h1>Campaigns</h1>
+  <p class="muted" style="margin-top:6px">Brief → research → audit → client Yes/No → plan → write + check → ready. A person steps in three times.</p></div>
+  <a class="btn" href="/new">+ New campaign</a>
+</div>
+<h2>All campaigns</h2>
+{% if campaigns %}
+<table class="table">
+  <tr><th>#</th><th>Campaign</th><th>Stage</th><th class="num">Model cost</th><th></th></tr>
+  {% for x in campaigns %}
+  <tr>
+    <td>{{ x.id }}</td>
+    <td><a href="/c/{{ x.id }}">{{ x.name }}</a></td>
+    <td>{% for k, label, _ in STEPS if k == x.state %}<span class="tag {{ 'amber' if k.startswith('AWAIT') else 'green' if k == 'DONE' else 'blue' }}">{{ label }}</span>{% endfor %}
+        {% if x.error %}<span class="tag red">stopped</span>{% endif %}</td>
+    <td class="num">${{ '%.2f' % x.cost_usd }}</td>
+    <td class="num"><a href="/c/{{ x.id }}">Open →</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="card"><p>No campaigns yet. Start one: the form is pre-filled with a made-up demo client.</p></div>
+{% endif %}
+{% endblock %}

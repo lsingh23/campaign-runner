@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ c.brief.client_name }} · Campaign Runner{% endblock %}
+{% block body %}
+<div class="head">
+  <div><div class="kicker">Campaign #{{ c.id }} · {{ c.brief.location }} · {{ 'own site' if c.brief.site_type == 'own_site' else 'third-party sites' }}</div>
+  <h1>{{ c.brief.client_name }} <span class="muted" style="font-weight:500">for “{{ c.brief.target_query }}”</span></h1></div>
+</div>
+<div id="live" hx-src="/c/{{ c.id }}/live">{% include "_loading.html" %}</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const box = document.getElementById('live');
+let last = '';
+async function tick() {
+  try {
+    const r = await fetch(box.getAttribute('hx-src'));
+    const html = await r.text();
+    if (html !== last) { const y = box.querySelector('.log')?.scrollTop; box.innerHTML = html; last = html;
+      const l = box.querySelector('.log'); if (l && y) l.scrollTop = y; }
+  } catch (e) {}
+}
+tick(); setInterval(tick, 1500);
+</script>
+{% endblock %}

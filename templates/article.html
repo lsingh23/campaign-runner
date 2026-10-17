@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block body %}
+{% set art = a.final or (a.attempts[-1].article if a.attempts else none) %}
+<a href="/c/{{ c.id }}/articles" class="small">← All articles</a>
+<div class="article-grid" style="margin-top:12px">
+<div>
+  <div class="kicker">{{ TYPE_LABELS.get(a.plan_type, a.plan_type) }} · <span class="st {{ a.status.split(' ')[0] }}">{{ a.status }}</span></div>
+  {% if not art %}<h1>{{ a.plan_title }}</h1><p class="muted">Being written…</p>{% else %}
+  <h1>{{ art.title }}</h1>
+  <div class="meta"><b>Meta</b> ({{ art.meta_description | length }} chars): {{ art.meta_description }}</div>
+  <div class="prose">{{ art.body_markdown | md | safe }}</div>
+  <h2>Sources</h2><ol class="small">{% for s in art.sources %}<li><a href="{{ s.url }}" target="_blank">{{ s.title or s.url }}</a></li>{% endfor %}</ol>
+  {% endif %}
+</div>
+<div class="side">
+  {% if a.status == 'flagged' %}
+  <div class="action err" style="margin:0 0 14px"><div><h3>Flagged for you</h3><p class="small" style="margin:4px 0 0">It failed checks {{ a.attempts | length }} times. Read the last review, then accept it or edit it by hand.</p></div>
+  <form method="post" action="/c/{{ c.id }}/articles/{{ a.id }}/accept"><button class="btn">Accept as is</button></form></div>
+  {% endif %}
+  <div class="card" style="margin-bottom:12px"><div class="kicker">Brief</div>
+    <p class="small"><b>Angle:</b> {{ a.brief.angle }}</p>
+    <div class="small">{% for f in a.brief.target_fanouts %}<div class="fan"><span class="tag blue">{{ f }}</span> {{ fanouts.get(f, '') }}</div>{% endfor %}</div>
+    <p class="small muted" style="margin-top:8px">{{ a.seconds | round | int }} s of model time · ${{ '%.2f' % a.cost_usd }}</p></div>
+  {% for i in issues %}<div class="flash warn">Set check: {{ i.kind }} with “{{ titles.get(i.b if i.a == a.id else i.a) }}”: {{ i.detail }}</div>{% endfor %}
+  <h3 style="margin:16px 0 8px">Check history</h3>
+  {% for t in a.attempts %}
+  <div class="attempt {{ t.verdict.replace(' ', '-') }}">
+    <div style="display:flex;justify-content:space-between"><b>{{ 'First draft' if t.n == 0 else 'Retry %d' % t.n }}</b>
+      <span class="tag {{ 'green' if t.verdict == 'passed' else 'red' }}">{{ t.verdict }}</span></div>
+    <div class="small muted" style="margin-top:6px">Rule check · code</div>
+    <ul class="checklist">{% for r in t.rules %}<li class="{{ 'p' if r.pass else 'f' }}">{{ r.detail }}</li>{% endfor %}</ul>
+    {% if t.review %}<div class="small muted" style="margin-top:8px">Reviewer · {{ MODELS.reviewer }}, separate context</div>
+    <ul class="checklist">{% for r in t.review.criteria %}<li class="{{ 'p' if r.pass else 'f' }}"><span><b>{{ r.name.replace('_', ' ') }}</b> · {{ r.reason }}{% if r.quote and not r.pass %} <i>“{{ r.quote }}”</i>{% endif %}{% if r.dropped %} <span class="muted">({{ r.dropped }})</span>{% endif %}</span></li>{% endfor %}</ul>{% endif %}
+    {% if t.feedback %}<details class="small" style="margin-top:8px"><summary>Sent back to the writer</summary><ul>{% for f in t.feedback %}<li>{{ f }}</li>{% endfor %}</ul></details>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+</div>
+{% endblock %}

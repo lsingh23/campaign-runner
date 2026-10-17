@@ -1,0 +1,61 @@
+{
+  "client_name": "Harbourline Bookkeeping",
+  "client_url": "https://harbourlinebookkeeping.com.au",
+  "location": "Melbourne, VIC",
+  "target_query": "best bookkeeping service melbourne",
+  "site_type": "own_site",
+  "runs": 3,
+  "mix": {
+    "comparison_3": 2,
+    "buyers_guide": 1,
+    "review_alternatives": 1,
+    "listicle": 1,
+    "first_hand": 1
+  },
+  "words_min": 900,
+  "words_max": 1100,
+  "sources_required": 4,
+  "exclude_titles": [
+    "How Much Does a Bookkeeper Cost in Melbourne? (2026 Guide)"
+  ],
+  "client_facts": {
+    "about": "Made-up demo client. Harbourline Bookkeeping is a Melbourne bookkeeping firm for small businesses and sole traders, founded 2017, team of 9, office in Richmond, serves all of metro Melbourne remotely and on-site.",
+    "services": [
+      "monthly bookkeeping",
+      "bank reconciliation",
+      "BAS preparation and lodgement (via registered BAS agent)",
+      "payroll and Single Touch Payroll",
+      "superannuation processing",
+      "accounts payable and receivable",
+      "Xero setup, migration and training",
+      "MYOB bookkeeping",
+      "catch-up and clean-up bookkeeping",
+      "monthly management reports"
+    ],
+    "credentials": [
+      "registered BAS agent with the Tax Practitioners Board",
+      "Xero Gold Partner",
+      "member of the Institute of Certified Bookkeepers (ICB)"
+    ],
+    "pricing": "fixed monthly packages from $290/month; catch-up work quoted as a fixed fee; free quotes",
+    "not_offered": [
+      "tax return",
+      "income tax",
+      "audit",
+      "smsf",
+      "financial planning",
+      "cfo",
+      "quickbooks",
+      "virtual cfo",
+      "company tax",
+      "legal",
+      "plus tax",
+      "cpa",
+      "cbd office",
+      "hourly rates",
+      "oneflare",
+      "hire count"
+    ],
+    "first_hand_notes": "Client-supplied: Dana, owner of a two-location café in Fitzroy, has used Harbourline since 2022. Before: 9 months of unreconciled Xero, late BAS. Harbourline did a fixed-fee catch-up in 3 weeks, moved payroll to STP, now sends a one-page monthly report by the 10th. Dana says the biggest change was knowing cash position weekly. Downsides she mentions: no tax return service, so she still uses a separate accountant; onboarding needed two weeks of receipts sorting on her side."
+  }
+}

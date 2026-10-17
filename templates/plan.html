@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="kicker">Step 5–6 · Plan and operator approval</div>
+<h1>Article plan</h1>
+<p class="today">Today: Topical Authority Builder with a long custom prompt, then "list all titles grouped by type".</p>
+{% if not groups %}<div class="card" style="margin-top:20px">The plan is not built yet.</div>{% else %}
+{% set open = c.state == 'AWAIT_OPERATOR' %}
+<p class="muted" style="margin:6px 0 0">Built only from services the client confirmed. {% if open %}Edit any title, untick to remove, then approve. Each approved title gets its own fresh writer.{% endif %}</p>
+{% if errs %}<div class="flash warn">Plan check: {{ errs | join('; ') }}</div>{% else %}<div class="flash ok">✓ Plan check passed: mix matches the brief, no repeats of published titles, every article targets real fan-out queries.</div>{% endif %}
+<form method="post">
+{% for t, items in groups.items() %}
+<h2>{{ TYPE_LABELS.get(t, t) }} <span class="muted" style="font-weight:500">({{ items | length }})</span></h2>
+{% for i in items %}
+<div class="card" style="margin-bottom:10px;{{ 'opacity:.45' if i.status == 'removed' }}">
+  <div style="display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start">
+    <input type="checkbox" name="k_{{ i.id }}" {{ 'checked' if i.status != 'removed' }} {{ 'disabled' if not open }} style="margin-top:10px;width:16px;height:16px">
+    <div>
+      {% if open %}<input type="text" name="t_{{ i.id }}" value="{{ i.title }}" style="font-weight:600">{% else %}<b>{{ i.title }}</b> {% if i.status == 'removed' %}<span class="tag">removed</span>{% endif %}{% endif %}
+      <p class="small" style="margin:6px 0 4px"><b>Angle:</b> {{ i.brief.angle }}</p>
+      <div class="small">{% for f in i.brief.target_fanouts %}<span class="tag blue" title="{{ fanouts.get(f, '') }}">{{ f }}</span> {% endfor %}
+        {% for x in i.brief.competitors or [] %}<span class="tag">{{ x }}</span> {% endfor %}</div>
+      {% if i.brief.outline %}<details class="small" style="margin-top:6px"><summary class="muted">Outline</summary><ul style="margin:4px 0">{% for h in i.brief.outline %}<li>{{ h }}</li>{% endfor %}</ul></details>{% endif %}
+    </div>
+  </div>
+</div>
+{% endfor %}{% endfor %}
+{% if open %}<button class="btn amber" type="submit" style="margin-top:12px">Approve titles and start writing →</button>{% endif %}
+</form>
+{% endif %}
+{% endblock %}

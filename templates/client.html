@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Visibility Audit · {{ c.brief.client_name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css"></head>
+<body style="background:#f8f9fa">
+<div class="wrap" style="max-width:1100px">
+<div class="kicker">Shared with {{ c.brief.client_name }} · client view</div>
+<h1>LLM Visibility Audit: “{{ c.brief.target_query }}”</h1>
+<p class="muted" style="margin:6px 0 14px">Please mark <b>Supported?</b> Yes or No for each row. Yes means you really offer this or it is true of your business. We will only write about rows marked Yes. Add notes in the blue column.</p>
+{% if request.query_params.get('sent') %}<div class="flash ok">✓ Thank you, your answers were sent. The agency's plan is being built now.</div>{% endif %}
+{% if request.query_params.get('saved') %}<div class="flash ok">Saved.</div>{% endif %}
+{% if request.query_params.get('missing') %}<div class="flash warn">Please answer every row before sending.</div>{% endif %}
+{% set open = c.state == 'AWAIT_CLIENT' %}
+<form method="post">
+<div class="sheet">
+  <div class="gsheet-bar"><span class="ic"></span><b>LLM Visibility Audit — {{ c.brief.client_name }}</b><span class="muted small">fanouts&amp;reasoning-keyword-summary</span></div>
+  <table>
+    <tr><th style="width:34px"></th><th>A · keyword</th><th>B · context</th><th>C · supported?</th><th>D · notes</th></tr>
+    {% set n = namespace(i=1) %}
+    {% for g, rows in groups.items() %}
+    <tr class="grp"><td class="muted">{{ n.i }}</td><td colspan="4">{{ g }}</td></tr>{% set n.i = n.i + 1 %}
+    {% for r in rows %}
+    <tr><td class="muted">{{ n.i }}</td><td><b>{{ r.keyword }}</b></td><td class="small">{{ r.context }}</td>
+      <td class="c"><select name="s_{{ r.id }}" {{ 'disabled' if not open }}><option value=""></option>
+        <option {{ 'selected' if r.supported == 'Yes' }}>Yes</option><option {{ 'selected' if r.supported == 'No' }}>No</option></select></td>
+      <td class="d"><input type="text" name="n_{{ r.id }}" value="{{ r.notes or '' }}" {{ 'disabled' if not open }}></td></tr>{% set n.i = n.i + 1 %}
+    {% endfor %}{% endfor %}
+  </table>
+</div>
+{% if open %}
+<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+  <button class="btn ghost" name="action" value="save">Save</button>
+  <button class="btn green" name="action" value="submit">Send answers to the agency →</button>
+  <button class="btn ghost" name="action" value="fill" style="margin-left:auto" title="Demo only">⚡ Demo: answer from client profile</button>
+</div>
+{% else %}<p class="muted" style="margin-top:14px">This sheet is closed. Your answers were received.</p>{% endif %}
+</form>
+</div></body></html>

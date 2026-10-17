@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="kicker">Step 1 · Brief</div>
+<h1>New campaign</h1>
+<p class="muted" style="margin:6px 0 4px">One short form instead of the long custom prompt. It's filled in with a made-up demo client.</p>
+<p class="today" style="margin-bottom:20px">Today: the dissector prompt, plus the article counts and exclusions typed into Topical Authority Builder.</p>
+<form method="post" action="/new">
+<fieldset><legend>The campaign</legend>
+  <div class="grid g2">
+    <div><label>Client name</label><input type="text" name="client_name" value="{{ s.client_name }}" required></div>
+    <div><label>Client website</label><input type="text" name="client_url" value="{{ s.client_url }}" required></div>
+    <div><label>Location</label><input type="text" name="location" value="{{ s.location }}" required></div>
+    <div><label>Target query (what a buyer asks the AI)</label><input type="text" name="target_query" value="{{ s.target_query }}" required></div>
+  </div>
+</fieldset>
+<fieldset><legend>The articles we want</legend>
+  <div class="grid g6">
+    {% for t, label in TYPE_LABELS.items() %}
+    <div><label>{{ label }}</label><input type="number" min="0" max="10" name="mix_{{ t }}" value="{{ s.mix.get(t, 0) }}"></div>
+    {% endfor %}
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div><label>Published on</label><select name="site_type">
+      <option value="own_site" {{ 'selected' if s.site_type == 'own_site' }}>Client's own site</option>
+      <option value="third_party" {{ 'selected' if s.site_type == 'third_party' }}>Third-party sites</option></select></div>
+    <div><label>Already published, don't repeat (one per line)</label><textarea name="exclude_titles" style="min-height:42px">{{ s.exclude_titles | join('\n') }}</textarea></div>
+  </div>
+</fieldset>
+
+<details class="fold"><summary><b>Quality rules</b> <span class="muted">· {{ s.words_min }}–{{ s.words_max }} words, {{ s.sources_required }} sources, {{ s.runs }} research runs. Set once, same for every campaign.</span></summary>
+  <div class="grid g3" style="margin-top:14px">
+    <div><label>Words per article (min – max)</label><div class="grid g2"><input type="number" name="words_min" value="{{ s.words_min }}"><input type="number" name="words_max" value="{{ s.words_max }}"></div></div>
+    <div><label>Sources per article</label><input type="number" name="sources_required" value="{{ s.sources_required }}"></div>
+    <div><label>Research runs (how many times the AI is asked)</label><input type="number" name="runs" min="1" max="5" value="{{ s.runs }}"></div>
+  </div>
+</details>
+
+<details class="fold"><summary><b>Client facts</b> <span class="muted">· what writers may say about the client. Saved once per client.</span></summary>
+  <div class="grid g2" style="margin-top:14px">
+    <div><label>About</label><textarea name="about">{{ f.about }}</textarea></div>
+    <div><label>Pricing</label><textarea name="pricing">{{ f.pricing }}</textarea></div>
+    <div><label>Services (one per line)</label><textarea name="services" style="min-height:150px">{{ f.services | join('\n') }}</textarea></div>
+    <div><label>Credentials (one per line)</label><textarea name="credentials" style="min-height:150px">{{ f.credentials | join('\n') }}</textarea></div>
+    <div><label>First-hand notes (client-supplied, for the first-hand article)</label><textarea name="first_hand_notes" style="min-height:110px">{{ f.first_hand_notes }}</textarea></div>
+    <div><label>Does NOT offer (demo only: lets the pretend client answer No)</label><textarea name="not_offered">{{ f.not_offered | join(', ') }}</textarea></div>
+  </div>
+</details>
+
+<button class="btn" type="submit" style="margin-top:16px">Start campaign →</button>
+</form>
+{% endblock %}

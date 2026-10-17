@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Campaign Runner{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="brand" href="/">Campaign Runner</a>
+  {% if c and request.url.path != '/c/%d' % c.id %}
+  <a class="back" href="/c/{{ c.id }}">← {{ c.brief.client_name }}: back to the campaign</a>
+  {% endif %}
+  {% if MODE == 'replay' %}<div class="mode"><span class="pill replay" title="Plays back a real earlier run from the cache">demo replay</span></div>{% endif %}
+</div></div>
+<div class="wrap">{% block body %}{% endblock %}</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

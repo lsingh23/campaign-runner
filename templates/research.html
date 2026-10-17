@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="kicker">Step 2 · Research dissection</div>
+<h1>How AI answers “{{ c.brief.target_query }}” today</h1>
+<p class="muted" style="margin-top:6px">The query was asked {{ runs | length or 'several' }} times with web search on. For each run we record the searches the AI ran behind the answer, the sites it read, and who it recommended.</p>
+<p class="today">Today: the chatgpt-backend-dissector skill in Claude + Chrome, then a PDF download.</p>
+{% if not runs %}<div class="card" style="margin-top:20px">Research is still running…</div>{% else %}
+
+{% if d.client %}
+<div class="action {{ 'done' if d.client.named_in_answer else 'err' }}" style="margin-top:20px"><div>
+  <h3>{{ c.brief.client_name }}: {{ 'named in AI answers' if d.client.named_in_answer else 'not named in any AI answer' }}{{ ' · seen in sources' if d.client.seen_in_sources }}</h3>
+  <p class="small" style="margin:4px 0 0">{{ d.client.note }}</p></div></div>
+{% endif %}
+
+<h2>At a glance (measured in code)</h2>
+<div class="scroll"><table class="table">
+  <tr><th>Run</th><th>Model</th><th class="num">Fan-out searches</th><th class="num">Source records</th><th class="num">Distinct sites</th><th class="num">Answer chars</th><th class="num">Duration</th></tr>
+  {% for r in runs %}<tr><td>Run {{ r.run }}</td><td>{{ r.model }}</td><td class="num">{{ r.measured.search_calls }}</td><td class="num">{{ r.measured.source_records }}</td>
+  <td class="num">{{ r.measured.distinct_hosts }}</td><td class="num">{{ r.measured.answer_chars }}</td><td class="num">{{ r.measured.seconds }} s</td></tr>{% endfor %}
+</table></div>
+
+{% if d.key_findings %}<h2>Key findings</h2><ul>{% for k in d.key_findings %}<li>{{ k }}</li>{% endfor %}</ul>{% endif %}
+
+<h2>Who wins today</h2>
+<div class="cards">
+  {% for r in runs %}<div class="card"><div class="kicker">Run {{ r.run }}</div>
+    <ol style="margin:4px 0 0;padding-left:20px">{% for w in d.winners if w.run == r.run %}<li><b>{{ w.brand }}</b> <span class="tag">{{ w.category }}</span><div class="small muted">{{ w.reason }}</div></li>{% endfor %}</ol></div>{% endfor %}
+</div>
+
+<details class="fold"><summary><b>Fan-out queries</b> <span class="muted">· {{ fanouts | length }} searches the AI ran behind its answers</span></summary>
+<table class="table"><tr><th>ID</th><th>Run</th><th>Query the AI searched</th></tr>
+  {% for f in fanouts %}<tr><td><span class="tag blue">{{ f.id }}</span></td><td>{{ f.run }}</td><td class="fan">{{ f.query }}</td></tr>{% endfor %}</table></details>
+
+{% if d.reasoning_patterns %}<details class="fold"><summary><b>What the AI rewarded</b></summary><ul>{% for k in d.reasoning_patterns %}<li>{{ k }}</li>{% endfor %}</ul></details>{% endif %}
+
+<details class="fold"><summary><b>Sources the AI saw</b> <span class="muted">· {{ hosts | length }} sites</span></summary>
+<table class="table"><tr><th>Site</th><th>Type</th><th class="num">Records</th></tr>
+  {% for h, n in hosts %}<tr><td>{{ h }}</td><td><span class="tag {{ 'red' if host_types.get(h) == 'brand_site' else 'blue' if host_types.get(h) == 'directory' else '' }}">{{ (host_types.get(h) or 'other').replace('_', ' ') }}</span></td><td class="num">{{ n }}</td></tr>{% endfor %}
+</table>
+<p class="small muted" style="margin-top:8px">Brand sites are never linked from articles. All other sources make up the approved source pool for writers.</p></details>
+
+<details class="fold"><summary><b>Raw answers</b></summary>
+{% for r in runs %}<details class="card" style="margin-bottom:10px"><summary><b>Run {{ r.run }}</b> answer</summary><div class="prose" style="font-size:14px;margin-top:10px">{{ r.answer | md | safe }}</div></details>{% endfor %}</details>
+{% endif %}
+{% endblock %}

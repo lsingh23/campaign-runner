@@ -1,0 +1,73 @@
+{% set waiting_client = c.state == 'AWAIT_CLIENT' %}{% set waiting_op = c.state == 'AWAIT_OPERATOR' %}
+<div class="steps" style="--n: {{ steps | length }}">
+  {% for s in steps %}
+  <{{ 'a' if s.href else 'div' }} class="step {{ s.status }} {{ 'hum' if s.hum }}"{% if s.href %} href="{{ s.href }}"{% if '/client/' in s.href %} target="_blank"{% endif %}{% endif %}>
+    <div class="dot">{{ '✓' if s.status == 'done' else ('!' if s.status == 'error' else s.n) }}</div>
+    <b>{{ s.label }}</b><small>{{ s.sub }}</small>
+  </{{ 'a' if s.href else 'div' }}>
+  {% endfor %}
+</div>
+<p class="legend small muted"><span class="key run"></span>runs on its own <span class="key hum"></span>a person steps in · click a finished step to see what it made</p>
+
+{% if c.error %}
+<div class="action err"><div><h3>Stopped at this step</h3><p class="small" style="margin:4px 0 0">{{ c.error }}</p>
+<p class="small muted">Everything before this step is saved in the campaign record.</p></div>
+<form method="post" action="/c/{{ c.id }}/retry"><button class="btn">Retry step</button></form></div>
+{% elif waiting_client %}
+<div class="action wait"><div><h3>✋ Waiting for the client</h3><p class="small" style="margin:4px 0 0">The client ticks Yes/No for each service. Nothing is planned until they answer.</p>
+<p class="today">Today: the client fills column C "supported?" in the Google Sheet.</p></div>
+<div style="display:flex;gap:8px"><a class="btn ghost" href="/c/{{ c.id }}/audit">See audit</a><a class="btn amber" href="/client/{{ c.client_token }}" target="_blank">Open client sheet ↗</a></div></div>
+{% elif waiting_op %}
+<div class="action wait"><div><h3>✋ Your turn: approve the titles</h3><p class="small" style="margin:4px 0 0">{{ n_plan }} titles, built only from what the client said Yes to.</p>
+<p class="today">Today: reading the plan in ChatGPT and asking for changes.</p></div>
+<a class="btn amber" href="/c/{{ c.id }}/plan">Review plan →</a></div>
+{% elif c.state == 'AWAIT_FIRST' %}
+<div class="action wait"><div style="flex:1"><h3>✋ Your turn: read the first {{ arts | selectattr('final') | list | length }} articles</h3>
+<p class="small" style="margin:4px 0 8px">Approve them and add a note. The note goes to the writer of every remaining article.</p>
+<p class="small" style="margin:0 0 10px">{% for a in arts if a.final %}<a href="/c/{{ c.id }}/articles/{{ a.id }}" target="_blank">#{{ a.plan_idx + 1 }} {{ a.plan_title }} ↗</a> <span class="st {{ a.status.split(' ')[0] }}">{{ a.status }}</span><br>{% endfor %}</p>
+<form method="post" action="/c/{{ c.id }}/first" style="display:flex;gap:8px;align-items:flex-end">
+<textarea name="notes" rows="2" style="flex:1" placeholder="Notes for the remaining articles (optional), e.g. shorter intros, mention the free quote less">{{ "Keep intros to two sentences and mention the free quote at most once." if MODE == "replay" }}</textarea>
+<button class="btn amber">Approve, write the rest →</button></form>
+<p class="today">Today: the feedback you give between batches of 4.</p></div></div>
+{% elif c.state == 'DONE' %}
+<div class="action done"><div><h3>✓ Campaign ready</h3><p class="small" style="margin:4px 0 0">{{ counts.get('ready', 0) + counts.get('accepted', 0) }} ready{% if counts.get('flagged') %} · {{ counts.flagged }} flagged for you{% endif %}{% if fc.issues %} · <a href="/c/{{ c.id }}/articles#set-check">{{ fc.issues | length }} repeat{{ 's' if fc.issues | length != 1 }} across articles to review</a>{% endif %}. Publish them or send them to writers.</p></div>
+<div style="display:flex;gap:8px"><a class="btn ghost" href="/c/{{ c.id }}/articles">Articles</a><a class="btn green" href="/c/{{ c.id }}/export.zip">Download .md ↓</a></div></div>
+{% elif now %}
+<div class="action run"><div><h3>Running: {{ now[0] }}</h3><p class="small" style="margin:4px 0 0">No one needs to do anything right now.</p>
+<p class="today">{{ now[1] }}</p></div></div>
+{% endif %}
+
+<div class="split">
+  <div>
+    <h3 style="margin-bottom:10px">What's happening</h3>
+    <div class="log">
+      {% for e in events[:6] %}
+      <div class="{{ e.kind }}"><time>{{ e.ts | clock }}</time><span>{{ e.message }}</span></div>
+      {% endfor %}
+    </div>
+    {% if events | length > 6 %}
+    <details class="more"><summary>Full log ({{ events | length }} lines)</summary>
+    <div class="log">
+      {% for e in events[6:] %}
+      <div class="{{ e.kind }}"><time>{{ e.ts | clock }}</time><span>{{ e.message }}</span></div>
+      {% endfor %}
+    </div></details>
+    {% endif %}
+  </div>
+  <div>
+    <div class="stats">
+      <div class="stat"><b>{{ arts | length or n_plan or '–' }}</b><span>articles</span></div>
+      <div class="stat"><b style="color:var(--green)">{{ counts.get('ready', 0) + counts.get('accepted', 0) }}</b><span>ready</span></div>
+      <div class="stat"><b style="color:var(--red)">{{ counts.get('flagged', 0) }}</b><span>flagged</span></div>
+      {% if MODE != 'replay' %}<div class="stat"><b>${{ '%.2f' % c.cost_usd }}</b><span>model cost</span></div>{% endif %}
+    </div>
+    {% if arts %}
+    <div class="alist">
+      {% for a in arts %}
+      <a href="/c/{{ c.id }}/articles/{{ a.id }}"><span><span class="muted">#{{ a.plan_idx + 1 }}</span> {{ a.plan_title }}</span>
+        <span style="display:flex;gap:6px;align-items:center">{% if a.attempts | length > 1 %}<span class="tag amber">{{ a.attempts | length - 1 }} retr{{ 'y' if a.attempts | length == 2 else 'ies' }}</span>{% endif %}<span class="st {{ a.status.split(' ')[0] }}">{{ a.status }}</span></span></a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
